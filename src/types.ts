@@ -1,4 +1,5 @@
 import type { Request } from 'express';
+import type { Store } from 'express-rate-limit';
 import type { ImapFlowOptions } from 'imapflow';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport/index.js';
 export type Role = 'requester' | 'agent' | 'admin';
@@ -65,6 +66,8 @@ export type InboundEmailResult =
   | { status: 'accepted' | 'duplicate'; caseId: number; commentId: number }
   | { status: 'ignored'; reason: string };
 export interface Config {
+  /** Default 300 requests/minute/IP; supply a shared store for distributed deployments. */
+  rateLimit?: { limit?: number; windowMs?: number; store?: Store };
   /** Disable timers and invoke flushEmails/pollInbox from a scheduler instead. */
   backgroundWorkers?: boolean;
   /** Disable the standalone HTML console when embedding the React component. */

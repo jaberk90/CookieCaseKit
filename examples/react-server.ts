@@ -1,10 +1,12 @@
 import express from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { build } from 'esbuild';
 import { createTicketing } from '../src/index.js';
 import { resolve } from 'node:path';
 
 // Local demonstration only. In your host, replace this fixed identity with verified session data.
 const app = express();
+app.use(rateLimit({ windowMs: 60_000, limit: 500 }));
 const kit = createTicketing({
   database: { filename: ':memory:' },
   ui: false,

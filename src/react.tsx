@@ -289,7 +289,9 @@ export function CaseKit({
   onUnauthorized,
   getToken,
 }: CaseKitProps) {
-  const normalized = basePath.replace(/\/+$/, '');
+  let pathEnd = basePath.length;
+  while (pathEnd > 0 && basePath[pathEnd - 1] === '/') pathEnd--;
+  const normalized = basePath.slice(0, pathEnd);
   const validPath =
     (normalized === '' || /^\/(?!\/)/.test(normalized)) && !/[?#\\]/.test(normalized);
   const [me, setMe] = useState<Bootstrap | null>(null);

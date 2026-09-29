@@ -1,4 +1,5 @@
 import express from 'express';
+import { rateLimit, type Store } from 'express-rate-limit';
 import type { Request } from 'express';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { simpleParser } from 'mailparser';
@@ -16,6 +17,7 @@ import type {
 import type { AttachmentStorage } from './storage.js';
 
 export interface CloudConfig {
+  rateLimit?: { limit?: number; windowMs?: number; store?: Store };
   store: CaseStore;
   auth(req: Request): User | null | Promise<User | null>;
   categories?: string[];
@@ -519,6 +521,15 @@ export function createCloudTicketing(config: CloudConfig) {
     });
     next();
   });
+  router.use(
+    rateLimit({
+      windowMs: 60_000,
+      limit: 300,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      ...config.rateLimit,
+    }),
+  );
   router.use(async (req, res, next) => {
     ensureOpen();
     res.locals.user = identity(await config.auth(req));
@@ -644,7 +655,7 @@ export function createCloudTicketing(config: CloudConfig) {
         id: attachmentId,
         caseId: n,
         name,
-        size: req.body.length,
+        size: Buffer.byteLength(req.body),
         key,
         internal,
         status: 'pending',

@@ -220,3 +220,7 @@ CASEKIT_TEST_BACKEND=cosmos CASEKIT_TEST_COSMOS_CONNECTION='…' npx tsx --test 
 ```
 
 Never use production resources for test credentials. Run real private-object upload/download, malware scanner, provider email/reply and deployed-host authentication checks for each intended cloud. A passing in-memory test or TypeScript build does not establish provider-level support. **Do not publish the expanded 1.0.0 as fully verified until those deployment checks pass.**
+
+## Request rate limits
+
+Both engines apply a default 300 requests/minute/IP limit before authentication. Configure `rateLimit: {limit, windowMs, store}` to fit the host. For multiple instances, supply a shared express-rate-limit store or enforce a provider WAF/API Gateway limit; the default in-memory store is per instance. Set a precise Express trusted-proxy policy so clients cannot spoof the rate-limit identity.

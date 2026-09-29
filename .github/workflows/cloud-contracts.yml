@@ -46,6 +46,10 @@ jobs:
         with:
           node-version: '24'
           cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
       - uses: google-github-actions/setup-gcloud@v2
         with:
           install_components: cloud-firestore-emulator
@@ -57,11 +61,12 @@ jobs:
           CASEKIT_TEST_BACKEND: firestore
           CASEKIT_TEST_GOOGLE_PROJECT: casekit-test
         run: |
-          gcloud emulators firestore start --host-port=127.0.0.1:8085 > /tmp/firestore.log 2>&1 &
+          gcloud emulators firestore start --project=casekit-test --host-port=127.0.0.1:8085 > /tmp/firestore.log 2>&1 &
           emulator_pid=$!
-          trap 'kill "$emulator_pid" || true' EXIT
+          trap 'cat /tmp/firestore.log; kill "$emulator_pid" || true' EXIT
           for attempt in {1..30}; do
             if curl --silent http://127.0.0.1:8085 >/dev/null; then break; fi
             sleep 1
           done
+          curl --silent http://127.0.0.1:8085 >/dev/null
           npx tsx --test tests/cloud-live.test.ts

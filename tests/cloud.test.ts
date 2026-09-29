@@ -180,3 +180,20 @@ test('cloud attachments stay quarantined, private and size limited', async () =>
     .send(Buffer.alloc(101))
     .expect(413);
 });
+
+test('cloud rate limiting runs before authentication or database access', async () => {
+  let calls = 0;
+  const kit = createCloudTicketing({
+    store: memoryStore(),
+    auth: () => {
+      calls++;
+      return staff;
+    },
+    rateLimit: { limit: 1, windowMs: 60000 },
+  });
+  const app = express();
+  app.use(kit.router);
+  await request(app).get('/api/me').expect(200);
+  await request(app).get('/api/me').expect(429);
+  assert.equal(calls, 1);
+});
