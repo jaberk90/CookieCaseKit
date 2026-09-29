@@ -2,6 +2,8 @@
 
 ## 1.0.1
 
+- Support an explicit public origin for safe writes behind Firebase Hosting and other reverse proxies.
+
 - Fix embedded brand contrast and host CSS collisions affecting the toolbar and theme toggle.
 - Add controlled React theme and onThemeChange props to synchronize with host applications.
 
