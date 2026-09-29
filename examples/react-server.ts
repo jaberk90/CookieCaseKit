@@ -9,7 +9,9 @@ const kit = createTicketing({
   database: { filename: ':memory:' },
   ui: false,
   auth: (req) =>
-    req.headers.cookie?.includes('demo-support=denied')
+    req.headers.cookie?.includes('demo-support=denied') ||
+    (req.headers.cookie?.includes('demo-support=bearer') &&
+      req.get('Authorization') !== 'Bearer demo-token')
       ? null
       : {
           id: 'react-admin',

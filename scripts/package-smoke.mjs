@@ -60,6 +60,7 @@ crm.handler; crm.router; crm.createCase({title:'Contact',description:'Hello'}, u
   const source = `import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { createTicketing } from '${packageName}';
+import { createCloudTicketing } from '${packageName}/cloud';
 import express from 'express';
 const require = createRequire(import.meta.url);
 for (const factory of [createTicketing, require('${packageName}').createTicketing]) {
@@ -70,7 +71,9 @@ for (const factory of [createTicketing, require('${packageName}').createTicketin
  try { for (const path of ['', 'app.js', 'style.css','brand.css','logo.svg','theme.js','api/me']) { const r = await fetch('http://127.0.0.1:'+server.address().port+'/desk/'+path); assert.equal(r.status,200,path); } }
  finally { await new Promise(r=>server.close(r)); await crm.close(); }
 }
-console.log('Packed ESM + CJS API, consumer types and bundled UI passed');`;
+assert.equal(typeof createCloudTicketing,'function');
+assert.equal(typeof require('${packageName}/cloud').createCloudTicketing,'function');
+console.log('Packed ESM + CJS API, cloud imports without SDK peers, consumer types and bundled UI passed');`;
   writeFileSync(join(dir, 'smoke.mjs'), source);
   execFileSync(process.execPath, ['smoke.mjs'], { cwd: dir, stdio: 'inherit' });
   // React is optional for server-only consumers. Test browser imports only after installing peers.
@@ -96,7 +99,7 @@ console.log('Packed ESM + CJS API, consumer types and bundled UI passed');`;
       join(dir, 'react-types.mts'),
       `import { CaseKit, type CaseKitProps } from '${packageName}/react';
 import { createElement } from 'react';
-const props: CaseKitProps = {basePath:'/_casekit',onUnauthorized:()=>{}};
+const props: CaseKitProps = {basePath:'/_casekit',onUnauthorized:()=>{},getToken:async()=> 'host-token'};
 createElement(CaseKit, props);`,
     );
     execFileSync(

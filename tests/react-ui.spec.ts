@@ -72,3 +72,18 @@ test('React cannot grant access when the backend session is unauthorized', async
   await expect(page.getByRole('button', { name: 'New case' })).toHaveCount(0);
   expect((await page.request.get('http://127.0.0.1:3101/_casekit/api/cases')).status()).toBe(401);
 });
+
+test('React uses host bearer tokens for every backend request', async ({ page, context }) => {
+  await context.addCookies([
+    { name: 'demo-support', value: 'bearer', url: 'http://127.0.0.1:3101' },
+  ]);
+  const requests: string[] = [];
+  page.on('request', (req) => {
+    if (req.url().includes('/_casekit/api/')) requests.push(req.headers()['authorization']);
+  });
+  await page.goto('http://127.0.0.1:3101/support?bearer=1');
+  await expect(page.getByRole('heading', { name: 'Every case. Under control.' })).toBeVisible();
+  await expect(page.locator('.profile')).toContainText('Jordan Admin');
+  expect(requests.length).toBeGreaterThan(0);
+  expect(requests.every((v) => v === 'Bearer demo-token')).toBeTruthy();
+});

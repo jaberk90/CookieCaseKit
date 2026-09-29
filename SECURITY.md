@@ -19,3 +19,7 @@ Dependabot checks npm updates at 02:17 and GitHub Actions updates at 02:37 Ameri
 Dependency review checks newly introduced dependencies on PRs. Keep the scheduled workflows enabled on the default branch. Configure notification subscriptions in GitHub to receive security and failed workflow alerts.
 
 Browser writes must use the same origin as the API. Behind a TLS-terminating reverse proxy, configure Express `trust proxy` for the actual trusted proxy addresses so `req.protocol` reflects HTTPS; do not blindly trust arbitrary forwarded headers. Apply host rate limits to public contact forms and authenticated API routes.
+
+## Cloud adapters
+
+Cloud storage uses tenant partitions and conditional transactions. Identity-provider setup, private storage policies, cloud IAM, database backups, worker endpoint authentication, and malware scanning are host responsibilities. See [cloud security and deployment requirements](docs/cloud/README.md). The adapters do not imply an independent security audit or provider certification.

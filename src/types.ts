@@ -65,6 +65,8 @@ export type InboundEmailResult =
   | { status: 'accepted' | 'duplicate'; caseId: number; commentId: number }
   | { status: 'ignored'; reason: string };
 export interface Config {
+  /** Disable timers and invoke flushEmails/pollInbox from a scheduler instead. */
+  backgroundWorkers?: boolean;
   /** Disable the standalone HTML console when embedding the React component. */
   ui?: boolean;
   database: { filename: string };

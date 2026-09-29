@@ -1,0 +1,67 @@
+name: Cloud storage contracts
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  postgres-dynamo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: casekit-local-test
+          POSTGRES_DB: casekit
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports: ['8000:8000']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx tsx --test tests/cloud-live.test.ts
+        env:
+          CASEKIT_TEST_BACKEND: postgres
+          CASEKIT_TEST_POSTGRES_URL: postgres://postgres:casekit-local-test@localhost:5432/casekit
+      - run: npx tsx --test tests/cloud-live.test.ts
+        env:
+          CASEKIT_TEST_BACKEND: dynamodb
+          CASEKIT_TEST_DYNAMO_ENDPOINT: http://localhost:8000
+  firestore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: cloud-firestore-emulator
+      - run: npm ci
+      - name: Run Firestore emulator contract
+        shell: bash
+        env:
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8085
+          CASEKIT_TEST_BACKEND: firestore
+          CASEKIT_TEST_GOOGLE_PROJECT: casekit-test
+        run: |
+          gcloud emulators firestore start --host-port=127.0.0.1:8085 > /tmp/firestore.log 2>&1 &
+          emulator_pid=$!
+          trap 'kill "$emulator_pid" || true' EXIT
+          for attempt in {1..30}; do
+            if curl --silent http://127.0.0.1:8085 >/dev/null; then break; fi
+            sleep 1
+          done
+          npx tsx --test tests/cloud-live.test.ts

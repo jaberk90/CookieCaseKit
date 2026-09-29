@@ -180,13 +180,20 @@ export function createTicketing(config: Config) {
       });
     return running;
   }
-  const timer = transport
-    ? setInterval(() => {
-        void flushEmails().catch((e) => logger.error('CookieCaseKit outbox worker failed', e));
-      }, interval)
-    : undefined;
+  const timer =
+    transport && config.backgroundWorkers !== false
+      ? setInterval(() => {
+          void flushEmails().catch((e) => logger.error('CookieCaseKit outbox worker failed', e));
+        }, interval)
+      : undefined;
   timer?.unref();
-  const inbox = createInbound(db, inboundConfig, logger);
+  const inbox = createInbound(
+    db,
+    inboundConfig,
+    logger,
+    undefined,
+    config.backgroundWorkers !== false,
+  );
   router.use((_req, res, next) => {
     res.set({
       'Cache-Control': 'no-store',

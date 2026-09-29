@@ -16,10 +16,13 @@ export interface CaseKitProps {
   /** Where your Node app mounts caseKit.router. Same-origin paths only. */
   basePath?: string;
   className?: string;
+  /** Resolve a fresh host-verified bearer token for each request (Firebase, Cognito, Entra). */
+  getToken?: () => string | null | Promise<string | null>;
   /** Called when the package backend returns 401. Your app owns login/navigation. */
   onUnauthorized?: () => void;
 }
 interface Bootstrap {
+  attachments?: { maxBytes: number };
   user: User;
   brand: { name: string; accent: string };
   categories: string[];
@@ -139,8 +142,153 @@ function Dialog({
   );
 }
 
+interface Attachment {
+  id: string;
+  name: string;
+  size: number;
+  status: string;
+  internal: boolean;
+}
+function AttachmentPanel({
+  basePath,
+  caseId,
+  maxBytes,
+  staff,
+  getToken,
+}: {
+  basePath: string;
+  caseId: number;
+  maxBytes: number;
+  staff: boolean;
+  getToken?: CaseKitProps['getToken'];
+}) {
+  const [items, setItems] = useState<Attachment[]>([]);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const tokenRef = useRef(getToken);
+  tokenRef.current = getToken;
+  const call = useCallback(
+    async (suffix: string, init: RequestInit = {}) => {
+      const token = await tokenRef.current?.();
+      if (tokenRef.current && !token) throw new Error('Sign in to access attachments.');
+      const res = await fetch(`${basePath}/api/cases/${caseId}/attachments${suffix}`, {
+        ...init,
+        credentials: 'same-origin',
+        headers: {
+          'X-CookieCaseKit': '1',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...init.headers,
+        },
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || 'Attachment request failed');
+      }
+      return res;
+    },
+    [basePath, caseId],
+  );
+  const refresh = useCallback(async () => {
+    const res = await call('');
+    setItems((await res.json()).items);
+  }, [call]);
+  useEffect(() => {
+    void refresh().catch((e) => setError(e.message));
+  }, [refresh]);
+  async function upload(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const file = data.get('file') as File;
+    if (!file?.size || file.size > maxBytes) {
+      setError(`Choose a file up to ${Math.floor(maxBytes / 1024)} KB.`);
+      return;
+    }
+    setBusy(true);
+    setError('');
+    try {
+      await call('', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'X-Filename': encodeURIComponent(file.name),
+          'X-Internal': String(data.get('internal') === 'on'),
+        },
+        body: file,
+      });
+      form.reset();
+      await refresh();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function download(item: Attachment) {
+    setError('');
+    try {
+      const res = await call('/' + item.id);
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = item.name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+  return (
+    <section aria-label="Case attachments">
+      <h3>Attachments</h3>
+      <p className="hint">Files become available after a security scan.</p>
+      <ul>
+        {items.map((item) => (
+          <li key={item.id}>
+            {item.name} · {item.status}
+            {item.internal ? ' · Internal' : ''}{' '}
+            {item.status === 'clean' && (
+              <button type="button" className="button subtle" onClick={() => void download(item)}>
+                Download {item.name}
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+      <form onSubmit={upload}>
+        <label>
+          File
+          <input name="file" type="file" required />
+        </label>
+        {staff && (
+          <label>
+            <input name="internal" type="checkbox" />
+            Internal attachment
+          </label>
+        )}
+        <button className="button" disabled={busy}>
+          {busy ? 'Uploading…' : 'Upload attachment'}
+        </button>
+        <button
+          className="button subtle"
+          type="button"
+          onClick={() => void refresh().catch((e) => setError(e.message))}
+        >
+          Refresh attachments
+        </button>
+      </form>
+      {error && <p role="alert">{error}</p>}
+    </section>
+  );
+}
+
 /** Native React support console. Import 'cookiecasekit/react.css' once in your app. */
-export function CaseKit({ basePath = '/_casekit', className = '', onUnauthorized }: CaseKitProps) {
+export function CaseKit({
+  basePath = '/_casekit',
+  className = '',
+  onUnauthorized,
+  getToken,
+}: CaseKitProps) {
   const normalized = basePath.replace(/\/+$/, '');
   const validPath =
     (normalized === '' || /^\/(?!\/)/.test(normalized)) && !/[?#\\]/.test(normalized);
@@ -169,16 +317,27 @@ export function CaseKit({ basePath = '/_casekit', className = '', onUnauthorized
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const onUnauthorizedRef = useRef(onUnauthorized);
   onUnauthorizedRef.current = onUnauthorized;
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
   const detailSequence = useRef(0);
   const api = useCallback(
     async <T,>(path: string, method = 'GET', body?: unknown, signal?: AbortSignal): Promise<T> => {
       if (!validPath)
         throw new Error('CaseKit basePath must be a same-origin path without query or hash.');
+      const token = await getTokenRef.current?.();
+      if (getTokenRef.current && !token) {
+        onUnauthorizedRef.current?.();
+        throw new Error('Sign in with an account that has support access.');
+      }
       const response = await fetch(`${normalized}/api/${path}`, {
         method,
         credentials: 'same-origin',
         signal,
-        headers: { 'Content-Type': 'application/json', 'X-CookieCaseKit': '1' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CookieCaseKit': '1',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
       if (response.status === 401) {
@@ -675,6 +834,16 @@ export function CaseKit({ basePath = '/_casekit', className = '', onUnauthorized
                 <span>Target: {new Date(ticket.dueAt).toLocaleString()}</span>
               </div>
               <p className="description">{ticket.description}</p>
+              {me.attachments && (
+                <AttachmentPanel
+                  key={ticket.id}
+                  basePath={normalized}
+                  caseId={ticket.id}
+                  maxBytes={me.attachments.maxBytes}
+                  staff={staff}
+                  getToken={getToken}
+                />
+              )}
               {staff && (
                 <form key={ticket.version} onSubmit={update}>
                   <div className="form-grid">
