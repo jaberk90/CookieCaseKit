@@ -472,7 +472,7 @@ export function createTicketing(config: Config) {
         )
         .run(ticket.id, actor.id, actor.name, body, Number(internal), now);
       db.prepare('UPDATE cases SET updatedAt=?, version=version+1 WHERE id=?').run(now, ticket.id);
-      if (!internal && actor.id !== ticket.requesterId)
+      if (!internal && (actor.role !== 'requester' || actor.id !== ticket.requesterId))
         queue(ticket, 'New reply', `${actor.name} replied:\n\n${body}`);
       return {
         id: Number(result.lastInsertRowid),

@@ -293,3 +293,56 @@ test('IMAP polling uses durable UID cursors, deduplicates replays, and retries f
     await f.cleanup();
   }
 });
+
+test('SQLite emails public staff replies on their own case without leaking private notes', async () => {
+  for (const role of ['agent', 'admin'] as const) {
+    let actor: User = alice;
+    const sent: Record<string, unknown>[] = [];
+    const kit = createTicketing({
+      database: { filename: ':memory:' },
+      backgroundWorkers: false,
+      auth: () => actor,
+      email: {
+        from: 'support@example.com',
+        transport: {
+          name: 'capture',
+          version: '1',
+          send: (
+            mail: { data: Record<string, unknown> },
+            done: (error: null, result: object) => void,
+          ) => {
+            sent.push(mail.data);
+            done(null, { messageId: mail.data.messageId });
+          },
+        } as never,
+      },
+    });
+    const post = (path: string, body: object) =>
+      request(kit.handler)
+        .post('/api/' + path)
+        .set('X-CookieCaseKit', '1')
+        .send(body);
+    try {
+      const c = (await post('cases', { title: 'Own case', description: 'Help' }).expect(201)).body;
+      await kit.flushEmails();
+      sent.length = 0;
+      await post(`cases/${c.id}/comments`, { body: 'Customer follow-up' }).expect(201);
+      actor = { ...alice, role };
+      await post(`cases/${c.id}/comments`, { body: 'Private information', internal: true }).expect(
+        201,
+      );
+      await kit.flushEmails();
+      assert.equal(sent.length, 0);
+      const reply = 'Thank you! Resolved.\nYour access is restored.';
+      await post(`cases/${c.id}/comments`, { body: reply }).expect(201);
+      await kit.flushEmails();
+      assert.equal(sent.length, 1);
+      assert.equal(sent[0].to, alice.email);
+      assert.match(String(sent[0].subject), /New reply/);
+      assert.ok(String(sent[0].text).includes(reply));
+      assert.ok(!String(sent[0].text).includes('Private information'));
+    } finally {
+      await kit.close();
+    }
+  }
+});
