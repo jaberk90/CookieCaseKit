@@ -48,7 +48,7 @@ const users: Record<string, User> = {
   outsider: { ...staff, tenantId: 'two' },
 };
 function fixture() {
-  const sent: { messageId: string; subject: string }[] = [];
+  const sent: { messageId: string; subject: string; text: string; to: string }[] = [];
   const objects = new Map<string, Buffer>();
   const store = memoryStore();
   const kit = createCloudTicketing({
@@ -242,4 +242,26 @@ test('explicit public origin supports proxies without trusting forwarded headers
       publicOrigin: 'https://stocks.example/path',
     }),
   );
+});
+
+test('public staff replies to their own case include the full email body', async () => {
+  for (const role of ['agent', 'admin'] as const) {
+    const f = fixture();
+    const actor = { ...alice, role };
+    const c = await f.kit.createCase(body, alice);
+    await f.kit.flushEmails('one');
+    f.sent.length = 0;
+    await f.kit.addComment(c.id, { body: 'Customer follow-up' }, alice);
+    await f.kit.addComment(c.id, { body: 'Private information', internal: true }, actor);
+    await f.kit.flushEmails('one');
+    assert.equal(f.sent.length, 0);
+    const reply = 'Thank you! Resolved.\nYour access is restored.';
+    await f.kit.addComment(c.id, { body: reply }, actor);
+    await f.kit.flushEmails('one');
+    assert.equal(f.sent.length, 1);
+    assert.equal(f.sent[0].to, alice.email);
+    assert.match(f.sent[0].subject, /New reply/);
+    assert.ok(f.sent[0].text.includes(reply));
+    assert.ok(!f.sent[0].text.includes('Private information'));
+  }
 });

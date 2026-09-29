@@ -325,7 +325,7 @@ export function createCloudTicketing(config: CloudConfig) {
       };
       await add(tx, childPrefix('comment', n) + comment.id, comment);
       tx.put(caseKey(n), record({ ...c, version: c.version + 1, updatedAt: now }));
-      if (!internal && u.id !== c.requesterId)
+      if (!internal && (u.role !== 'requester' || u.id !== c.requesterId))
         await queue(tx, c, 'New reply', `${u.name} replied:\n\n${body}`);
       return comment;
     });

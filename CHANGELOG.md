@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2
+
+- Send public agent/admin reply notifications, including the full reply text, even when the staff member is the case requester. Applies to cloud and SQLite backends.
+- Keep internal notes private and suppress notification echoes for requester replies. Status updates and public replies remain separately labeled emails.
+
 ## 1.0.1
 
 - Support an explicit public origin for safe writes behind Firebase Hosting and other reverse proxies.
