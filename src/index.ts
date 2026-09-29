@@ -209,6 +209,21 @@ export function createTicketing(config: Config) {
         (req.get('X-CookieCaseKit') !== '1' || !req.is('application/json'))
       )
         fail(403, 'JSON and X-CookieCaseKit: 1 are required');
+      if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+        // Reject browser cross-origin writes even if host middleware enables permissive CORS.
+        const origin = req.get('Origin');
+        if (req.get('Sec-Fetch-Site') === 'cross-site')
+          fail(403, 'Cross-origin writes are forbidden');
+        if (origin) {
+          let sameOrigin = false;
+          try {
+            sameOrigin = new URL(origin).origin === `${req.protocol}://${req.get('host')}`;
+          } catch {
+            /* Invalid and opaque origins are untrusted. */
+          }
+          if (!sameOrigin) fail(403, 'Cross-origin writes are forbidden');
+        }
+      }
       next();
     },
     express.json({ limit: '64kb' }),
