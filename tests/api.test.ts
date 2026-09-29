@@ -319,3 +319,23 @@ test('API-only mode does not claim the host React page or serve a standalone con
     await crm.close();
   }
 });
+
+test('rejects cross-origin browser writes even with the custom header', async (t) => {
+  const f = fixture();
+  t.after(() => f.crm.close());
+  const body = { title: 'Origin test', description: 'Protected' };
+  for (const origin of ['https://evil.example', 'null', 'not-a-url', 'https://support.example']) {
+    await f
+      .api('post', '/cases', 'alice', body)
+      .set('Host', 'support.example')
+      .set('Origin', origin)
+      .expect(403);
+  }
+  await f.api('post', '/cases', 'alice', body).set('Sec-Fetch-Site', 'cross-site').expect(403);
+  await f
+    .api('post', '/cases', 'alice', body)
+    .set('Host', 'support.example')
+    .set('Origin', 'http://support.example')
+    .expect(201);
+  await f.create().expect(201); // Non-browser clients with no Origin remain supported.
+});

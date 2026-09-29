@@ -1,6 +1,6 @@
 {
   "name": "cookiecasekit",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Embeddable case management for Node.js. Bring your authentication; configure the rest.",
   "type": "module",
   "main": "./dist/index.cjs",

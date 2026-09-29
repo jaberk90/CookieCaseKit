@@ -48,7 +48,7 @@ Open **http://127.0.0.1:3000/support/**. The demo seeds eight cases, uses an in-
 
 ## Install into an application
 
-The npm name `cookiecasekit` is a working package name; this repository has not been published. Until you publish under a name you own, use a local archive:
+Install the published package with `npm install cookiecasekit`. To test the 1.0.0 release checkout before publication, use a local archive:
 
 ```sh
 # In this repository
@@ -56,7 +56,7 @@ npm ci
 npm pack
 
 # In your host application (adjust the path)
-npm install /path/to/cookiecasekit-0.1.0.tgz
+npm install /path/to/cookiecasekit-1.0.0.tgz
 ```
 
 After publishing, consumers can use `npm install cookiecasekit` (or your chosen scoped name).
@@ -296,3 +296,9 @@ With your **`NPM`** Actions secret configured, push the tested source and publis
 - **GitHub Packages:** `@jaberk90/cookiecasekit` — linked to this repository's Packages section. npm publication alone does not populate that section. Set the GitHub package's visibility to public in its settings if desired.
 
 Subsequent releases follow the version/changelog PR flow. Failed or partial publications can be retried from **Actions → Publish tagged release** with the existing release tag; published versions are skipped. See [publishing setup](docs/PUBLISHING.md) for token permissions, first-release steps, GitHub registry installation, and release PR setup.
+
+### Stable 1.0.0 release
+
+The 1.0.0 API supports direct Node case creation and a native React support page. Deployment remains limited to one process per persistent SQLite database. SMTP/IMAP credentials, verified host authentication, HTTPS and rate limits are host configuration responsibilities.
+
+Security automation runs nightly, including weekends, with Dependabot PRs for dependency upgrades and available vulnerability fixes. See [the security policy](SECURITY.md) for schedules and limitations. After merging the tested 1.0.0 release PR, publish a stable GitHub release tagged `v1.0.0` at that merge commit to trigger registry publication.
