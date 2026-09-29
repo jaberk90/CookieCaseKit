@@ -116,3 +116,7 @@ Call `caseKit.close()` when shutting down after requests drain. Configure email 
 ## Cloud authentication
 
 Pass `getToken={() => currentUser.getIdToken()}` for Firebase, or the equivalent fresh-token function from your Cognito/Entra host. Each request resolves the current token and sends it in Authorization. The host backend must verify it. For cookie sessions, omit `getToken`. Cloud setup and private attachments are documented in [the cloud guide](cloud/README.md).
+
+### Match your application's theme
+
+In 1.0.1, pass `theme="dark"` or `theme="light"` and `onThemeChange={setTheme}` to synchronize the embedded console with your host theme. Without `onThemeChange`, a controlled theme hides the local toggle. Omit both props to retain the independent, persisted theme preference.

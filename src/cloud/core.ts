@@ -17,6 +17,8 @@ import type {
 import type { AttachmentStorage } from './storage.js';
 
 export interface CloudConfig {
+  /** Exact browser-facing origin when a reverse proxy rewrites the backend Host. */
+  publicOrigin?: string;
   rateLimit?: { limit?: number; windowMs?: number; store?: Store };
   store: CaseStore;
   auth(req: Request): User | null | Promise<User | null>;
@@ -91,6 +93,22 @@ const visible = (c: Case, u: User) =>
 export function createCloudTicketing(config: CloudConfig) {
   if (!config?.store || typeof config.auth !== 'function')
     throw new Error('store and auth are required');
+  let publicOrigin: string | undefined;
+  if (config.publicOrigin !== undefined) {
+    const url = new URL(config.publicOrigin);
+    if (
+      !['https:', 'http:'].includes(url.protocol) ||
+      url.username ||
+      url.password ||
+      url.pathname !== '/' ||
+      url.search ||
+      url.hash
+    )
+      throw new Error(
+        'publicOrigin must be an HTTP(S) origin without credentials, path, query or hash',
+      );
+    publicOrigin = url.origin;
+  }
   const { store } = config;
   const categories = config.categories ?? [
     'General',
@@ -544,7 +562,8 @@ export function createCloudTicketing(config: CloudConfig) {
       if (origin) {
         let same = false;
         try {
-          same = new URL(origin).origin === `${req.protocol}://${req.get('host')}`;
+          same =
+            new URL(origin).origin === (publicOrigin ?? `${req.protocol}://${req.get('host')}`);
         } catch {}
         if (!same) fail(403, 'Cross-origin writes are forbidden');
       }

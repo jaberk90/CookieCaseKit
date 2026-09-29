@@ -197,3 +197,49 @@ test('cloud rate limiting runs before authentication or database access', async 
   await request(app).get('/api/me').expect(429);
   assert.equal(calls, 1);
 });
+
+test('explicit public origin supports proxies without trusting forwarded headers', async () => {
+  const kit = createCloudTicketing({
+    store: memoryStore(),
+    auth: () => staff,
+    publicOrigin: 'https://stocks.example',
+    categories: ['Contact'],
+  });
+  const app = express();
+  app.use(kit.router);
+  await request(app)
+    .post('/api/cases')
+    .set('Host', 'internal.run.app')
+    .set('Origin', 'https://stocks.example')
+    .set('X-CookieCaseKit', '1')
+    .send(body)
+    .expect(201);
+  for (const origin of [
+    'https://evil.example',
+    'https://stocks.example.evil.test',
+    'null',
+    'http://stocks.example',
+  ]) {
+    await request(app)
+      .post('/api/cases')
+      .set('Origin', origin)
+      .set('X-Forwarded-Host', 'stocks.example')
+      .set('X-CookieCaseKit', '1')
+      .send(body)
+      .expect(403);
+  }
+  await request(app)
+    .post('/api/cases')
+    .set('Origin', 'https://stocks.example')
+    .set('Sec-Fetch-Site', 'cross-site')
+    .set('X-CookieCaseKit', '1')
+    .send(body)
+    .expect(403);
+  assert.throws(() =>
+    createCloudTicketing({
+      store: memoryStore(),
+      auth: () => staff,
+      publicOrigin: 'https://stocks.example/path',
+    }),
+  );
+});

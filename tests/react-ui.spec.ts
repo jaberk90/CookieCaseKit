@@ -87,3 +87,28 @@ test('React uses host bearer tokens for every backend request', async ({ page, c
   expect(requests.length).toBeGreaterThan(0);
   expect(requests.every((v) => v === 'Bearer demo-token')).toBeTruthy();
 });
+
+test('host navigation styles do not change embedded brand or theme control', async ({ page }) => {
+  await page.goto('http://127.0.0.1:3101/support');
+  await page.addStyleTag({
+    content:
+      '.brand { color: white !important; } .topbar { border-radius: 999px !important; box-shadow: 0 20px 20px black !important; } .theme-toggle { width: 32px !important; height: 32px !important; position: absolute !important; }',
+  });
+  const kit = page.locator('.cck');
+  await expect(kit.locator('.cck-brand')).toBeVisible();
+  await expect(kit.locator('.cck-brand')).not.toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(kit.locator('.cck-theme-toggle')).toHaveCSS('white-space', 'nowrap');
+  await expect(kit.locator('.cck-theme-toggle')).not.toHaveCSS('width', '32px');
+  await kit.getByRole('button', { name: /Switch to .* mode/ }).click();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+  ).toBeTruthy();
+});
+
+test('host controls the embedded theme', async ({ page }) => {
+  await page.goto('http://127.0.0.1:3101/support?controlled=1');
+  const kit = page.locator('.cck');
+  await expect(kit).toHaveAttribute('data-theme', 'dark');
+  await kit.getByRole('button', { name: 'Switch to light mode' }).click();
+  await expect(kit).toHaveAttribute('data-theme', 'light');
+});

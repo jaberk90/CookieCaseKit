@@ -224,3 +224,7 @@ Never use production resources for test credentials. Run real private-object upl
 ## Request rate limits
 
 Both engines apply a default 300 requests/minute/IP limit before authentication. Configure `rateLimit: {limit, windowMs, store}` to fit the host. For multiple instances, supply a shared express-rate-limit store or enforce a provider WAF/API Gateway limit; the default in-memory store is per instance. Set a precise Express trusted-proxy policy so clients cannot spoof the rate-limit identity.
+
+### Reverse proxies and browser writes
+
+When Firebase Hosting or another proxy rewrites the backend Host header, configure `publicOrigin: 'https://your-site.example'` on `createCloudTicketing`. Use the exact browser-facing origin from trusted deployment configuration. The router compares browser Origin against this value and continues to reject cross-site requests; it never trusts arbitrary forwarded-host headers. Without this option, direct same-origin checking is unchanged.

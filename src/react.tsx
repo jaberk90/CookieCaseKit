@@ -16,6 +16,9 @@ export interface CaseKitProps {
   /** Where your Node app mounts caseKit.router. Same-origin paths only. */
   basePath?: string;
   className?: string;
+  /** Optional host-controlled appearance. */
+  theme?: 'light' | 'dark';
+  onThemeChange?: (theme: 'light' | 'dark') => void;
   /** Resolve a fresh host-verified bearer token for each request (Firebase, Cognito, Entra). */
   getToken?: () => string | null | Promise<string | null>;
   /** Called when the package backend returns 401. Your app owns login/navigation. */
@@ -288,6 +291,8 @@ export function CaseKit({
   className = '',
   onUnauthorized,
   getToken,
+  theme: controlledTheme,
+  onThemeChange,
 }: CaseKitProps) {
   let pathEnd = basePath.length;
   while (pathEnd > 0 && basePath[pathEnd - 1] === '/') pathEnd--;
@@ -316,7 +321,8 @@ export function CaseKit({
   const [refresh, setRefresh] = useState(0);
   const [creating, setCreating] = useState(false);
   const [ticket, setTicket] = useState<Detail | null>(null);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [localTheme, setTheme] = useState<'light' | 'dark'>('light');
+  const theme = controlledTheme ?? localTheme;
   const onUnauthorizedRef = useRef(onUnauthorized);
   onUnauthorizedRef.current = onUnauthorized;
   const getTokenRef = useRef(getToken);
@@ -466,6 +472,8 @@ export function CaseKit({
   };
   function toggleTheme() {
     const next = theme === 'light' ? 'dark' : 'light';
+    onThemeChange?.(next);
+    if (controlledTheme) return;
     setTheme(next);
     try {
       localStorage.setItem('cookiecasekit-theme', next);
@@ -536,7 +544,7 @@ export function CaseKit({
       ) : (
         <>
           <aside className="sidebar">
-            <div className="brand">
+            <div className="cck-brand">
               <Logo />
               <span>{me.brand.name}</span>
             </div>
@@ -580,14 +588,15 @@ export function CaseKit({
             </div>
           </aside>
           <div className="shell">
-            <header className="topbar">
+            <header className="cck-topbar">
               <div>
                 Workspace <span>/</span>
                 <strong>Cases</strong>
               </div>
               <div className="top-actions">
                 <button
-                  className="theme-toggle"
+                  className="cck-theme-toggle"
+                  hidden={Boolean(controlledTheme && !onThemeChange)}
                   type="button"
                   aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
                   aria-pressed={theme === 'dark'}
