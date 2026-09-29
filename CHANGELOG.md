@@ -2,6 +2,12 @@
 
 ## 1.0.0
 
+- Add the asynchronous cloud API and Firestore, PostgreSQL, DynamoDB and Cosmos DB storage adapters.
+- Add private Google Cloud Storage, S3 and Azure Blob attachments with authenticated access and scan quarantine.
+- Add SMTP, SES and Azure email sender adapters, scheduled outbox processing, worker leases and duplicate-safe inbound replies.
+- Add React bearer-token authentication, OIDC verification and retry-safe cloud contact submissions.
+- Add cloud deployment documentation and provider contract tests. Expanded cloud release remains subject to live-provider validation.
+
 - Establish the stable Node and React integration API.
 - Reject cross-origin browser writes independently of host CORS settings.
 - Run dependency audits and CodeQL every night; check npm and GitHub Actions updates nightly, including weekends.

@@ -28,6 +28,7 @@ export function createInbound(
   logger: NonNullable<Config['logger']>,
   makeClient: (options: ConstructorParameters<typeof ImapFlow>[0]) => ImapFlow = (options) =>
     new ImapFlow(options),
+  backgroundWorkers = true,
 ) {
   let stopped = false;
   let polling: Promise<void> | undefined;
@@ -197,13 +198,14 @@ export function createInbound(
       });
     return polling;
   }
-  const timer = config
-    ? setInterval(() => {
-        void pollInbox().catch((error) =>
-          logger.error('CookieCaseKit inbox polling failed', error),
-        );
-      }, config.pollIntervalMs ?? 30000)
-    : undefined;
+  const timer =
+    config && backgroundWorkers
+      ? setInterval(() => {
+          void pollInbox().catch((error) =>
+            logger.error('CookieCaseKit inbox polling failed', error),
+          );
+        }, config.pollIntervalMs ?? 30000)
+      : undefined;
   timer?.unref();
   return {
     receiveEmail,

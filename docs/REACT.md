@@ -112,3 +112,7 @@ npm run demo:react
 Open **http://127.0.0.1:3001/support**. The demo renders CaseKit inside a host website page and seeds a case via a direct method call. Its fixed admin identity is for localhost demonstration only. Your existing standalone demo at port 3000 remains separate.
 
 Call `caseKit.close()` when shutting down after requests drain. Configure email as described in the README; omit `email.publicUrl` if customer emails must not link to the private admin page.
+
+## Cloud authentication
+
+Pass `getToken={() => currentUser.getIdToken()}` for Firebase, or the equivalent fresh-token function from your Cognito/Entra host. Each request resolves the current token and sends it in Authorization. The host backend must verify it. For cookie sessions, omit `getToken`. Cloud setup and private attachments are documented in [the cloud guide](cloud/README.md).

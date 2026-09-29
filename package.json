@@ -27,7 +27,127 @@
         "default": "./dist/react/index.cjs"
       }
     },
-    "./react.css": "./dist/react.css"
+    "./react.css": "./dist/react.css",
+    "./cloud": {
+      "import": {
+        "types": "./dist/cloud/index.d.ts",
+        "default": "./dist/cloud/index.js"
+      },
+      "require": {
+        "types": "./dist/cloud/index.d.cts",
+        "default": "./dist/cloud/index.cjs"
+      }
+    },
+    "./firestore": {
+      "import": {
+        "types": "./dist/cloud/firestore.d.ts",
+        "default": "./dist/cloud/firestore.js"
+      },
+      "require": {
+        "types": "./dist/cloud/firestore.d.cts",
+        "default": "./dist/cloud/firestore.cjs"
+      }
+    },
+    "./postgres": {
+      "import": {
+        "types": "./dist/cloud/postgres.d.ts",
+        "default": "./dist/cloud/postgres.js"
+      },
+      "require": {
+        "types": "./dist/cloud/postgres.d.cts",
+        "default": "./dist/cloud/postgres.cjs"
+      }
+    },
+    "./dynamodb": {
+      "import": {
+        "types": "./dist/cloud/dynamodb.d.ts",
+        "default": "./dist/cloud/dynamodb.js"
+      },
+      "require": {
+        "types": "./dist/cloud/dynamodb.d.cts",
+        "default": "./dist/cloud/dynamodb.cjs"
+      }
+    },
+    "./cosmos": {
+      "import": {
+        "types": "./dist/cloud/cosmos.d.ts",
+        "default": "./dist/cloud/cosmos.js"
+      },
+      "require": {
+        "types": "./dist/cloud/cosmos.d.cts",
+        "default": "./dist/cloud/cosmos.cjs"
+      }
+    },
+    "./s3": {
+      "import": {
+        "types": "./dist/cloud/s3.d.ts",
+        "default": "./dist/cloud/s3.js"
+      },
+      "require": {
+        "types": "./dist/cloud/s3.d.cts",
+        "default": "./dist/cloud/s3.cjs"
+      }
+    },
+    "./gcs": {
+      "import": {
+        "types": "./dist/cloud/gcs.d.ts",
+        "default": "./dist/cloud/gcs.js"
+      },
+      "require": {
+        "types": "./dist/cloud/gcs.d.cts",
+        "default": "./dist/cloud/gcs.cjs"
+      }
+    },
+    "./blob": {
+      "import": {
+        "types": "./dist/cloud/blob.d.ts",
+        "default": "./dist/cloud/blob.js"
+      },
+      "require": {
+        "types": "./dist/cloud/blob.d.cts",
+        "default": "./dist/cloud/blob.cjs"
+      }
+    },
+    "./auth": {
+      "import": {
+        "types": "./dist/cloud/auth.d.ts",
+        "default": "./dist/cloud/auth.js"
+      },
+      "require": {
+        "types": "./dist/cloud/auth.d.cts",
+        "default": "./dist/cloud/auth.cjs"
+      }
+    },
+    "./email": {
+      "import": {
+        "types": "./dist/cloud/email.d.ts",
+        "default": "./dist/cloud/email.js"
+      },
+      "require": {
+        "types": "./dist/cloud/email.d.cts",
+        "default": "./dist/cloud/email.cjs"
+      }
+    },
+    "./ses": {
+      "import": {
+        "types": "./dist/cloud/ses.d.ts",
+        "default": "./dist/cloud/ses.js"
+      },
+      "require": {
+        "types": "./dist/cloud/ses.d.cts",
+        "default": "./dist/cloud/ses.cjs"
+      }
+    },
+    "./azure-email": {
+      "import": {
+        "types": "./dist/cloud/azure-email.d.ts",
+        "default": "./dist/cloud/azure-email.js"
+      },
+      "require": {
+        "types": "./dist/cloud/azure-email.d.cts",
+        "default": "./dist/cloud/azure-email.cjs"
+      }
+    }
   },
   "files": [
     "dist",
@@ -37,7 +157,8 @@
     "docs",
     "examples/contact-us.ts",
     "examples/express.ts",
-    "examples/react-page.tsx"
+    "examples/react-page.tsx",
+    "examples/cloud"
   ],
   "engines": {
     "node": ">=22.13"
@@ -69,28 +190,44 @@
     "@types/mailparser": "^3.9.0",
     "@types/nodemailer": "^7.0.0",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
     "imapflow": "^2.1.2",
     "mailparser": "^3.9.31",
     "nodemailer": "^10.0.12"
   },
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1142.0",
+    "@aws-sdk/client-s3": "^3.1142.0",
+    "@aws-sdk/client-sesv2": "^3.1142.0",
+    "@aws-sdk/lib-dynamodb": "^3.1142.0",
+    "@azure/communication-email": "^1.1.0",
+    "@azure/cosmos": "^4.10.1",
+    "@azure/storage-blob": "^12.34.0",
+    "@google-cloud/firestore": "^9.2.0",
+    "@google-cloud/storage": "^8.2.0",
     "@playwright/test": "^1.63.0",
     "@types/node": "^24.0.0",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@types/supertest": "^6.0.0",
+    "esbuild": "^0.28.2",
+    "jose": "^6.2.12",
+    "pg": "^8.23.0",
+    "postcss": "^8.5.0",
     "prettier": "^3.6.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "supertest": "^7.0.0",
     "tsup": "^8.5.0",
     "tsx": "^4.20.0",
-    "typescript": "^5.9.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "postcss": "^8.5.0",
-    "esbuild": "^0.28.2"
+    "typescript": "^5.9.0"
   },
   "overrides": {
-    "esbuild": "^0.28.2"
+    "esbuild": "^0.28.2",
+    "gaxios": {
+      "uuid": "^11.1.1"
+    }
   },
   "repository": {
     "type": "git",
@@ -104,10 +241,54 @@
     "**/*.css"
   ],
   "peerDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1142.0",
+    "@aws-sdk/client-s3": "^3.1142.0",
+    "@aws-sdk/client-sesv2": "^3.1142.0",
+    "@aws-sdk/lib-dynamodb": "^3.1142.0",
+    "@azure/communication-email": "^1.1.0",
+    "@azure/cosmos": "^4.10.1",
+    "@azure/storage-blob": "^12.34.0",
+    "@google-cloud/firestore": "^9.2.0",
+    "@google-cloud/storage": "^8.2.0",
+    "jose": "^6.2.12",
+    "pg": "^8.23.0",
     "react": "^18.2.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "react": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "@google-cloud/firestore": {
+      "optional": true
+    },
+    "@aws-sdk/lib-dynamodb": {
+      "optional": true
+    },
+    "@aws-sdk/client-dynamodb": {
+      "optional": true
+    },
+    "@azure/cosmos": {
+      "optional": true
+    },
+    "@aws-sdk/client-s3": {
+      "optional": true
+    },
+    "@google-cloud/storage": {
+      "optional": true
+    },
+    "@azure/storage-blob": {
+      "optional": true
+    },
+    "jose": {
+      "optional": true
+    },
+    "@aws-sdk/client-sesv2": {
+      "optional": true
+    },
+    "@azure/communication-email": {
       "optional": true
     }
   }

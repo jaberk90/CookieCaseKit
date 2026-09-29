@@ -1,4 +1,5 @@
 import express from 'express';
+import { rateLimit } from 'express-rate-limit';
 import type { Request, Response, NextFunction } from 'express';
 import nodemailer from 'nodemailer';
 import { randomUUID } from 'node:crypto';
@@ -180,13 +181,20 @@ export function createTicketing(config: Config) {
       });
     return running;
   }
-  const timer = transport
-    ? setInterval(() => {
-        void flushEmails().catch((e) => logger.error('CookieCaseKit outbox worker failed', e));
-      }, interval)
-    : undefined;
+  const timer =
+    transport && config.backgroundWorkers !== false
+      ? setInterval(() => {
+          void flushEmails().catch((e) => logger.error('CookieCaseKit outbox worker failed', e));
+        }, interval)
+      : undefined;
   timer?.unref();
-  const inbox = createInbound(db, inboundConfig, logger);
+  const inbox = createInbound(
+    db,
+    inboundConfig,
+    logger,
+    undefined,
+    config.backgroundWorkers !== false,
+  );
   router.use((_req, res, next) => {
     res.set({
       'Cache-Control': 'no-store',
@@ -197,6 +205,15 @@ export function createTicketing(config: Config) {
     });
     next();
   });
+  router.use(
+    rateLimit({
+      windowMs: 60_000,
+      limit: 300,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      ...config.rateLimit,
+    }),
+  );
   router.use(async (req, res, next) => {
     res.locals.user = validateUser(await config.auth(req));
     next();

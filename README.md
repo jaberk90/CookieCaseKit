@@ -20,6 +20,29 @@ Configure a database, connect your existing authentication, and mount a complete
 
 CookieCaseKit is an initial ticketing product, inspired by service-desk workflows. It is not a ServiceNow replacement: CMDB, attachments, business-hours SLA calendars, custom automation designers, and PostgreSQL/MySQL adapters are not included.
 
+## Cloud deployments in 1.0.0
+
+The new asynchronous `cookiecasekit/cloud` API supports adapters for **Firestore, PostgreSQL, DynamoDB and Cosmos DB**, with private attachment storage for **Google Cloud Storage, AWS S3 and Azure Blob Storage**. SQLite remains available for a single persistent Node process.
+
+Cloud deployments include explicit scheduled email processing, atomic outbox writes, retry-safe case creation, concurrent-worker leases, verified host identities, and React bearer-token integration. Optional email adapters cover SMTP, Amazon SES and Azure Communication Services. Attachments remain quarantined until your trusted malware scanner approves them.
+
+See the [cloud integration guide](docs/cloud/README.md) for installation, database schemas, identity setup, security requirements, worker invocation, deployment limits, and provider verification requirements. These cloud additions are being prepared for 1.0.0; live-provider checks are a release gate, not implied by local test results.
+
+```ts
+import { createCloudTicketing } from 'cookiecasekit/cloud';
+import { firestoreStore } from 'cookiecasekit/firestore';
+
+const caseKit = createCloudTicketing({
+  store: firestoreStore(firestore),
+  auth: verifiedHostIdentity,
+  categories: contactTopics,
+});
+app.use('/api/support', caseKit.router);
+const ticket = await caseKit.createCase(input, requester, { idempotencyKey: submissionId });
+```
+
+In a Firebase/Cognito/Entra React host, render `<CaseKit basePath="/api/support" getToken={getFreshToken} />`. The server verifies the token; frontend roles never grant access.
+
 ## Node package + React page (recommended)
 
 Call `caseKit.createCase(input, requester)` directly from your existing Node handler or server action. No custom REST endpoint is needed. Mount the package's authenticated router once, then render your own React `/support` page:
@@ -265,7 +288,7 @@ Existing schema-v1 databases migrate automatically to v2. Replies to old notific
 
 SLA targets are elapsed hours from case creation, not business hours. A priority change recalculates the target from the original creation time. Pending cases do not pause it; reopened cases retain it. Resolved and closed cases do not count as overdue.
 
-This release supports **one application process per SQLite file**, on persistent local disk. It is not designed for horizontally scaled workers sharing one file or ephemeral serverless filesystems. Tenant records share the same physical database with application-level isolation. Use separate instances/files if physical isolation is required.
+The SQLite adapter supports **one application process per SQLite file**, on persistent local disk. It is not designed for horizontally scaled workers sharing one file or ephemeral serverless filesystems. Tenant records share the same physical database with application-level isolation. Use separate instances/files if physical isolation is required.
 
 ## Develop and release
 
@@ -299,6 +322,6 @@ Subsequent releases follow the version/changelog PR flow. Failed or partial publ
 
 ### Stable 1.0.0 release
 
-The 1.0.0 API supports direct Node case creation and a native React support page. Deployment remains limited to one process per persistent SQLite database. SMTP/IMAP credentials, verified host authentication, HTTPS and rate limits are host configuration responsibilities.
+The 1.0.0 API supports direct Node case creation and a native React support page. SQLite deployment remains limited to one process per persistent file; managed cloud adapters support concurrent application instances. SMTP/IMAP credentials, verified host authentication, HTTPS and rate limits are host configuration responsibilities.
 
 Security automation runs nightly, including weekends, with Dependabot PRs for dependency upgrades and available vulnerability fixes. See [the security policy](SECURITY.md) for schedules and limitations. After merging the tested 1.0.0 release PR, publish a stable GitHub release tagged `v1.0.0` at that merge commit to trigger registry publication.
