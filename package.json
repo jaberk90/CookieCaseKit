@@ -1,0 +1,74 @@
+{
+  "name": "cookiecasekit",
+  "version": "0.1.0",
+  "description": "Embeddable case management for Node.js. Bring your authentication; configure the rest.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "public",
+    "LICENSE",
+    "README.md",
+    "docs"
+  ],
+  "engines": {
+    "node": ">=22.13"
+  },
+  "license": "MIT",
+  "keywords": [
+    "ticketing",
+    "helpdesk",
+    "case-management",
+    "express",
+    "support"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "demo": "tsx examples/demo.ts",
+    "check": "npm run typecheck && npm test && npm run build",
+    "prepack": "npm run build",
+    "test:package": "node scripts/package-smoke.mjs",
+    "test:ui": "playwright test",
+    "screenshots": "node scripts/screenshots.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@types/express": "^5.0.0",
+    "@types/mailparser": "^3.9.0",
+    "@types/nodemailer": "^7.0.0",
+    "express": "^5.2.1",
+    "imapflow": "^2.1.2",
+    "mailparser": "^3.9.31",
+    "nodemailer": "^10.0.12"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.0.0",
+    "@types/supertest": "^6.0.0",
+    "prettier": "^3.6.0",
+    "supertest": "^7.0.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  },
+  "overrides": {
+    "esbuild": "^0.28.2"
+  }
+}

@@ -1,0 +1,38 @@
+node_modules/
+dist/
+coverage/
+*.tgz
+*.db
+*.db-shm
+*.db-wal
+.env
+.DS_Store
+.idea/
+*.iml
+playwright-report/
+test-results/
+.idea/*
+.idea/
+# Local configuration and secrets (keep the documented template)
+.env.*
+!.env.example
+*.local
+*.log
+npm-debug.log*
+
+# SQLite files, including databases configured with a .sqlite extension
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+
+# Email fixtures / exports may contain customer information
+*.eml
+*.mbox
+
+# Build/tool caches
+.cache/
+.npm/
+*.tsbuildinfo
