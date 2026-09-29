@@ -4,6 +4,7 @@ import postcss from 'postcss';
 const root = postcss.parse(readFileSync('public/style.css', 'utf8'));
 root.walkRules((rule) => {
   rule.selectors = rule.selectors.map((selector) => {
+    selector = selector.replace(/\.(brand|topbar|theme-toggle)(?![\w-])/g, '.cck-$1');
     let scoped = selector.replace(/:root/g, '.cck').replace(/^body\b/, '.cck');
     scoped = scoped.replace(/^\[data-theme=/, '.cck[data-theme=');
     scoped = scoped.replace(/#([a-z-]+)/g, '.cck-$1');
@@ -13,6 +14,10 @@ root.walkRules((rule) => {
 const overrides = `
 .cck { position: relative; isolation: isolate; min-height: 760px; width: 100%; color: var(--ink); }
 .cck .sidebar { position: absolute; }
+.cck .cck-brand { color: var(--ink); min-width: 0; }
+.cck .cck-brand span { overflow-wrap: anywhere; }
+.cck .cck-theme-toggle { width: auto; height: auto; min-height: 40px; white-space: nowrap; flex-shrink: 0; }
+.cck .cck-theme-toggle[hidden] { display: none; }
 .cck .cck-error { padding: 12px 16px; background: var(--paper); border: 1px solid var(--line); border-radius: 6px; color: #a44535; }
 .cck[data-theme='dark'] .cck-error { color: #f0a191; }
 .cck .cck-notice { padding: 28px; }

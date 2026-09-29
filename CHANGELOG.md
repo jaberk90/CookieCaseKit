@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- Fix embedded brand contrast and host CSS collisions affecting the toolbar and theme toggle.
+- Add controlled React theme and onThemeChange props to synchronize with host applications.
+
 ## 1.0.0
 
 - Add the asynchronous cloud API and Firestore, PostgreSQL, DynamoDB and Cosmos DB storage adapters.
