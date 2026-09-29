@@ -11,6 +11,14 @@ export interface User {
   role: Role;
   tenantId: string;
 }
+/** Requester identity supplied only by trusted server-side integrations. */
+export type Requester = Omit<User, 'role'>;
+export interface CreateCaseInput {
+  title: string;
+  description: string;
+  priority?: Priority;
+  category?: string;
+}
 export interface Case {
   id: number;
   number: string;
@@ -57,6 +65,8 @@ export type InboundEmailResult =
   | { status: 'accepted' | 'duplicate'; caseId: number; commentId: number }
   | { status: 'ignored'; reason: string };
 export interface Config {
+  /** Disable the standalone HTML console when embedding the React component. */
+  ui?: boolean;
   database: { filename: string };
   auth: (req: Request) => User | null | Promise<User | null>;
   brand?: { name?: string; accent?: string };

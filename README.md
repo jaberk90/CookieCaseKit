@@ -20,6 +20,21 @@ Configure a database, connect your existing authentication, and mount a complete
 
 CookieCaseKit is an initial ticketing product, inspired by service-desk workflows. It is not a ServiceNow replacement: CMDB, attachments, business-hours SLA calendars, custom automation designers, and PostgreSQL/MySQL adapters are not included.
 
+## Node package + React page (recommended)
+
+Call `caseKit.createCase(input, requester)` directly from your existing Node handler or server action. No custom REST endpoint is needed. Mount the package's authenticated router once, then render your own React `/support` page:
+
+```tsx
+import { CaseKit } from 'cookiecasekit/react';
+import 'cookiecasekit/react.css';
+
+export default function SupportPage() {
+  return <CaseKit basePath="/_casekit" />;
+}
+```
+
+Use `ui: false` and `app.use('/_casekit', caseKit.router)` on the server. The package supplies the browser transport; your session callback supplies the admin name and access. See the [complete Node + React integration](docs/REACT.md).
+
 ## Run the demo
 
 Requires **Node.js 22.13+**; Node 24 is recommended. Node's built-in SQLite API may emit an experimental warning on supported Node releases.
@@ -114,7 +129,13 @@ server.listen(3000); // UI at /, API at /api
 
 For Fastify, Nest, or other frameworks, use their Express/Node HTTP adapter or mount this as a sidecar route. Framework-specific adapters and edge runtimes are not included. Keep the console and API on the same origin as your host authentication.
 
+## Optional HTTP contact-form example
+
+If your website needs a new HTTP submission endpoint, use the [contact-form integration guide](docs/CONTACT-US.md) and [tested server example](examples/contact-us.ts). Visitors post to `/api/contact`; your backend calls `support.createCase()` and returns only a reference number. `/support` remains restricted to your authenticated users with support permission. Their names come from your existing session, mapped to `User.name`. Omit `email.publicUrl` to avoid linking visitor emails to the private console.
+
 ## Configuration
+
+Set `ui: false` when React owns the support page. The default `ui: true` also serves the standalone console.
 
 | Setting                        | Default / behavior                                                                                            |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
@@ -130,7 +151,7 @@ For Fastify, Nest, or other frameworks, use their Express/Node HTTP adapter or m
 | `email.pollIntervalMs`         | 30,000; minimum 1,000.                                                                                        |
 | `logger.error(message, error)` | `console.error`; provide a redacting application logger if needed.                                            |
 
-`createTicketing()` returns `router`, `handler`, `flushEmails()`, `pollInbox()`, `receiveEmail(rawMessage)` and async `close()`. Call `close()` during graceful shutdown after HTTP requests finish. It waits for in-flight notification delivery, inbox polling and email ingestion before closing storage.
+`createTicketing()` returns `router`, `handler`, `createCase(input, requester)`, `flushEmails()`, `pollInbox()`, `receiveEmail(rawMessage)` and async `close()`. Call `close()` during graceful shutdown after HTTP requests finish. It waits for in-flight notification delivery, inbox polling and email ingestion before closing storage.
 
 ## Add or change categories
 
@@ -257,10 +278,21 @@ npm run screenshots    # Refresh the actual demo screenshots
 npm pack               # Publishable archive (builds automatically)
 ```
 
-See [publishing setup](docs/PUBLISHING.md), [contributing](CONTRIBUTING.md), and [security](SECURITY.md). The release workflow opens a version/changelog PR from Conventional Commits; merging it creates a GitHub release and publishes to npm using trusted publishing. The weekly job refreshes release PRs when releasable changes exist. It does not publish empty weekly versions or auto-merge dependencies.
+See [publishing setup](docs/PUBLISHING.md), [contributing](CONTRIBUTING.md), and [security](SECURITY.md). The release workflow opens a version/changelog PR from Conventional Commits; merging it creates a GitHub release and publishes to npm using the `NPM` Actions secret and to GitHub Packages using `GITHUB_TOKEN`. The weekly job refreshes release PRs when releasable changes exist. It does not publish empty weekly versions or auto-merge dependencies.
 
 ## UI preview
 
 ![Case detail and conversation](docs/screenshots/case-detail.png)
 
 MIT licensed. Built with [Express](https://expressjs.com/en/guide/using-middleware/), [Node SQLite](https://nodejs.org/api/sqlite.html), and [Nodemailer SMTP](https://nodemailer.com/smtp).
+
+### Publish your first release
+
+The Node method and React `/support` integration are documented above and in the [integration guide](docs/REACT.md).
+
+With your **`NPM`** Actions secret configured, push the tested source and publish a GitHub release tagged **`v0.1.0`** at that commit. The **Publish tagged release** action validates the release/tag/version, runs checks, and publishes:
+
+- **npm:** `cookiecasekit` — install with `npm install cookiecasekit`.
+- **GitHub Packages:** `@jaberk90/cookiecasekit` — linked to this repository's Packages section. npm publication alone does not populate that section. Set the GitHub package's visibility to public in its settings if desired.
+
+Subsequent releases follow the version/changelog PR flow. Failed or partial publications can be retried from **Actions → Publish tagged release** with the existing release tag; published versions are skipped. See [publishing setup](docs/PUBLISHING.md) for token permissions, first-release steps, GitHub registry installation, and release PR setup.

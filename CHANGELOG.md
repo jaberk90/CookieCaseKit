@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add the native `cookiecasekit/react` component, scoped stylesheet, React host demo and API-only server mode.
+
+- Add trusted server-side case creation and a tested contact-form integration with an admin-only console.
+
 - Rename the package and console to CookieCaseKit (`cookiecasekit`).
 - Add IMAP email-reply ingestion, thread/sender checks, deduplication and schema-v2 migration.
 - Add persistent light/dark themes and a shared SVG logo/favicon.

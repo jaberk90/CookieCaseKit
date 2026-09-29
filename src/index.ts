@@ -5,11 +5,11 @@ import { randomUUID } from 'node:crypto';
 import { createInbound } from './inbound.js';
 import { fileURLToPath } from 'node:url';
 import { openDatabase, transaction } from './database.js';
-import type { Case, Config, User, Priority, Status } from './types.js';
+import type { Case, Config, User, Priority, Status, CreateCaseInput, Requester } from './types.js';
 export type * from './types.js';
 const statuses: Status[] = ['open', 'in_progress', 'pending', 'resolved', 'closed'];
 const priorities: Priority[] = ['low', 'normal', 'high', 'urgent'];
-class HttpError extends Error {
+export class TicketingError extends Error {
   constructor(
     public status: number,
     message: string,
@@ -18,7 +18,7 @@ class HttpError extends Error {
   }
 }
 function fail(status: number, message: string): never {
-  throw new HttpError(status, message);
+  throw new TicketingError(status, message);
 }
 function text(value: unknown, name: string, max: number, optional = false): string {
   if (typeof value !== 'string' || (!optional && !value.trim()) || value.length > max)
@@ -291,9 +291,17 @@ export function createTicketing(config: Config) {
       .get(new Date().toISOString(), ...args);
     res.json(row);
   });
-  router.post('/api/cases', (req, res) => {
-    const actor = user(res);
-    const body = req.body ?? {};
+  /** Trusted server-side submission. This does not expose a public HTTP endpoint. */
+  function createCase(body: CreateCaseInput, requester: Requester): Case {
+    if (closed) throw new Error('CookieCaseKit is closed');
+    const actor: User = {
+      id: text(requester?.id, 'requester id', 200),
+      name: text(requester?.name, 'requester name', 200),
+      tenantId: text(requester?.tenantId, 'tenant id', 200),
+      email: text(requester?.email, 'requester email', 254),
+      role: 'requester',
+    };
+    if (!validEmail(actor.email)) fail(400, 'Invalid requester email');
     const title = text(body.title, 'title', 200);
     const description = text(body.description, 'description', 20000);
     const priority = choice(body.priority ?? 'normal', priorities, 'priority');
@@ -327,7 +335,10 @@ export function createTicketing(config: Config) {
       queue(ticket, 'Case received', `${ticket.title}\n\nWe have received your request.`);
       return ticket;
     });
-    res.status(201).json(ticket);
+    return ticket;
+  }
+  router.post('/api/cases', (req, res) => {
+    res.status(201).json(createCase(req.body ?? {}, user(res)));
   });
   router.get('/api/cases/:id', (req, res) => {
     const actor = user(res);
@@ -448,19 +459,21 @@ export function createTicketing(config: Config) {
     res.type('css').send(`:root{--accent:${accent}}`);
   });
   router.use('/api', (_req, _res) => fail(404, 'Endpoint not found'));
-  router.get('/', (req, res, next) => {
-    if (!req.originalUrl.split('?')[0].endsWith('/')) return res.redirect(308, `${req.baseUrl}/`);
-    next();
-  });
-  router.use(
-    express.static(fileURLToPath(new URL('../public', import.meta.url)), {
-      etag: false,
-      maxAge: 0,
-    }),
-  );
+  if (config.ui !== false) {
+    router.get('/', (req, res, next) => {
+      if (!req.originalUrl.split('?')[0].endsWith('/')) return res.redirect(308, `${req.baseUrl}/`);
+      next();
+    });
+    router.use(
+      express.static(fileURLToPath(new URL('../public', import.meta.url)), {
+        etag: false,
+        maxAge: 0,
+      }),
+    );
+  }
   router.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
     const status =
-      error instanceof HttpError
+      error instanceof TicketingError
         ? error.status
         : (error as { type?: string })?.type === 'entity.too.large'
           ? 413
@@ -474,7 +487,7 @@ export function createTicketing(config: Config) {
           ? 'Internal server error'
           : status === 413
             ? 'Request too large'
-            : error instanceof HttpError
+            : error instanceof TicketingError
               ? error.message
               : 'Invalid JSON',
     });
@@ -485,6 +498,7 @@ export function createTicketing(config: Config) {
   return {
     router,
     handler,
+    createCase,
     receiveEmail: inbox.receiveEmail,
     pollInbox: inbox.pollInbox,
     flushEmails,

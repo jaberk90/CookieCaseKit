@@ -1,0 +1,72 @@
+name: Publish packages
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+concurrency:
+  group: package-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: npm
+    steps:
+      - name: Require a published stable GitHub release
+        uses: actions/github-script@v7
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        with:
+          script: |
+            const tag = process.env.RELEASE_TAG;
+            if (!/^v\d+\.\d+\.\d+$/.test(tag)) throw new Error('Expected a stable vX.Y.Z tag');
+            const {data} = await github.rest.repos.getReleaseByTag({...context.repo, tag});
+            if (data.draft || data.prerelease) throw new Error('A published stable release is required');
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - name: Verify tag matches package and lockfile
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const pkg = JSON.parse(fs.readFileSync('package.json'));
+          const lock = JSON.parse(fs.readFileSync('package-lock.json'));
+          if (process.env.RELEASE_TAG !== `v${pkg.version}` || lock.version !== pkg.version || lock.packages[''].version !== pkg.version) {
+            throw new Error('Release tag, package.json and package-lock.json versions must match');
+          }
+          if (pkg.name !== 'cookiecasekit') throw new Error('Unexpected npm package name');
+          JS
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run check
+      - run: npm run test:package
+      - run: npm audit --omit=dev --audit-level=moderate
+      - name: Publish to npm with the NPM secret
+        run: node scripts/publish-package.mjs https://registry.npmjs.org
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://npm.pkg.github.com
+          scope: '@jaberk90'
+      - name: Prepare GitHub Packages name
+        run: npm pkg set name=@jaberk90/cookiecasekit
+      - name: Publish to GitHub Packages
+        run: node scripts/publish-package.mjs https://npm.pkg.github.com
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}

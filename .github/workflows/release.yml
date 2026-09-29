@@ -31,24 +31,11 @@ jobs:
   publish:
     needs: version
     if: needs.version.outputs.released == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    environment: npm
+    uses: ./.github/workflows/publish.yml
+    with:
+      tag: ${{ needs.version.outputs.tag }}
+    secrets: inherit
     permissions:
       contents: read
+      packages: write
       id-token: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.version.outputs.tag }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          registry-url: https://registry.npmjs.org
-          cache: npm
-      - run: npm install --global npm@11
-      - run: npm ci
-      - run: npm run check
-      - run: npm run test:package
-      - run: npm audit --omit=dev --audit-level=moderate
-      - run: npm publish --access public --provenance

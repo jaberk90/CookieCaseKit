@@ -305,3 +305,17 @@ test('configured categories populate the console metadata and validate new cases
     await crm.close();
   }
 });
+test('API-only mode does not claim the host React page or serve a standalone console', async () => {
+  const crm = createTicketing({ database: { filename: ':memory:' }, auth: () => agent, ui: false });
+  const app = express();
+  app.use('/_casekit', crm.router);
+  app.get('/support', (_req, res) => res.send('Host React page'));
+  try {
+    await request(app).get('/support').expect(200, 'Host React page');
+    await request(app).get('/_casekit/api/me').expect(200);
+    await request(app).get('/_casekit/').expect(404);
+    await request(app).get('/_casekit/app.js').expect(404);
+  } finally {
+    await crm.close();
+  }
+});
