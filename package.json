@@ -210,7 +210,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@types/supertest": "^6.0.0",
+    "@types/supertest": "^7.2.1",
     "esbuild": "^0.28.2",
     "jose": "^6.2.12",
     "pg": "^8.23.0",
