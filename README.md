@@ -26,7 +26,7 @@ The new asynchronous `cookiecasekit/cloud` API supports adapters for **Firestore
 
 Cloud deployments include explicit scheduled email processing, atomic outbox writes, retry-safe case creation, concurrent-worker leases, verified host identities, and React bearer-token integration. Optional email adapters cover SMTP, Amazon SES and Azure Communication Services. Attachments remain quarantined until your trusted malware scanner approves them.
 
-See the [cloud integration guide](docs/cloud/README.md) for installation, database schemas, identity setup, security requirements, worker invocation, deployment limits, and provider verification requirements. These cloud additions are being prepared for 1.0.0; live-provider checks are a release gate, not implied by local test results.
+See the [cloud integration guide](docs/cloud/README.md) for installation, database schemas, identity setup, security requirements, worker invocation, deployment limits, and provider verification requirements. Cloud adapters are available in the stable package; live-provider behavior must be verified in your own cloud environment.
 
 ```ts
 import { createCloudTicketing } from 'cookiecasekit/cloud';
@@ -325,3 +325,7 @@ Subsequent releases follow the version/changelog PR flow. Failed or partial publ
 The 1.0.0 API supports direct Node case creation and a native React support page. SQLite deployment remains limited to one process per persistent file; managed cloud adapters support concurrent application instances. SMTP/IMAP credentials, verified host authentication, HTTPS and rate limits are host configuration responsibilities.
 
 Security automation runs nightly, including weekends, with Dependabot PRs for dependency upgrades and available vulnerability fixes. See [the security policy](SECURITY.md) for schedules and limitations. After merging the tested 1.0.0 release PR, publish a stable GitHub release tagged `v1.0.0` at that merge commit to trigger registry publication.
+
+## 1.1.0 maintenance release
+
+See the [release notes](docs/RELEASE-1.1.0.md) for dependency updates and build compatibility. Existing setup, APIs and screenshots remain applicable. Contributors run TypeScript 7 through `npm run typecheck`; tsup uses the compatible TypeScript 5.9 compiler API for package declarations.

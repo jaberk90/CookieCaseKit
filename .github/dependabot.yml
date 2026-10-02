@@ -6,6 +6,10 @@ updates:
       interval: cron
       cronjob: '17 2 * * *'
       timezone: America/Los_Angeles
+    # tsup needs the JavaScript compiler API; typescript-native tracks the current checker.
+    ignore:
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
     open-pull-requests-limit: 10
     commit-message:
       prefix: 'fix(deps)'

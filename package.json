@@ -1,6 +1,6 @@
 {
   "name": "cookiecasekit",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Embeddable case management for Node.js. Bring your authentication; configure the rest.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -173,7 +173,7 @@
   ],
   "scripts": {
     "build": "tsup && node scripts/build-react-css.mjs",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node node_modules/typescript-native/bin/tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "demo": "tsx examples/demo.ts",
     "check": "npm run typecheck && npm test && npm run build",
@@ -188,7 +188,7 @@
   "dependencies": {
     "@types/express": "^5.0.0",
     "@types/mailparser": "^3.9.0",
-    "@types/nodemailer": "^7.0.0",
+    "@types/nodemailer": "^8.0.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
     "imapflow": "^2.1.2",
@@ -206,11 +206,11 @@
     "@google-cloud/firestore": "^9.2.0",
     "@google-cloud/storage": "^8.2.0",
     "@playwright/test": "^1.63.0",
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.6.3",
     "@types/pg": "^8.23.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@types/supertest": "^6.0.0",
+    "@types/supertest": "^7.2.1",
     "esbuild": "^0.28.2",
     "jose": "^6.2.12",
     "pg": "^8.23.0",
@@ -221,7 +221,8 @@
     "supertest": "^7.0.0",
     "tsup": "^8.5.0",
     "tsx": "^4.20.0",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.3",
+    "typescript-native": "npm:typescript@^7.0.2"
   },
   "overrides": {
     "esbuild": "^0.28.2",

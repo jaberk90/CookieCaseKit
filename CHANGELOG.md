@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- Integrate all nine open dependency PRs, including current GitHub Actions and Node, Nodemailer and Supertest types.
+- Run type checks with TypeScript 7 while retaining TypeScript 5.9 for tsup declaration generation.
+- Preserve the existing Node/React API and stored data; no database migration or new secret is required.
+
 ## 1.0.2
 
 - Send public agent/admin reply notifications, including the full reply text, even when the staff member is the case requester. Applies to cloud and SQLite backends.
