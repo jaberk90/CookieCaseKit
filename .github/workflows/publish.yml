@@ -19,7 +19,7 @@ jobs:
     environment: npm
     steps:
       - name: Require a published stable GitHub release
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           RELEASE_TAG: ${{ inputs.tag }}
         with:
