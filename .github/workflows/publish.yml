@@ -28,7 +28,7 @@ jobs:
             if (!/^v\d+\.\d+\.\d+$/.test(tag)) throw new Error('Expected a stable vX.Y.Z tag');
             const {data} = await github.rest.repos.getReleaseByTag({...context.repo, tag});
             if (data.draft || data.prerelease) throw new Error('A published stable release is required');
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag }}
           persist-credentials: false
