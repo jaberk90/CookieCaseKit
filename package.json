@@ -188,7 +188,7 @@
   "dependencies": {
     "@types/express": "^5.0.0",
     "@types/mailparser": "^3.9.0",
-    "@types/nodemailer": "^7.0.0",
+    "@types/nodemailer": "^8.0.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
     "imapflow": "^2.1.2",
