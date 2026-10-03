@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+- Add durable cloud IMAP reply polling with read-only mailbox access, bounded backlog recovery and duplicate-safe public notes/history.
+- Add retryable confirmed-email activity export for CookieMail integration, independent of SMTP delivery.
+- See [release notes](docs/RELEASE-1.2.0.md) and the cloud inbox setup below.
+
 ## 1.1.0
 
 - Integrate all nine open dependency PRs, including current GitHub Actions and Node, Nodemailer and Supertest types.

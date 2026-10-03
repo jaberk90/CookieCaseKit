@@ -1,4 +1,5 @@
 import express from 'express';
+import { cloudInbox, type CloudInboundConfig } from './inbound.js';
 import { rateLimit, type Store } from 'express-rate-limit';
 import type { Request } from 'express';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
@@ -28,6 +29,8 @@ export interface CloudConfig {
   email?: {
     from: string;
     replyTo?: string;
+    /** Call pollInbox(tenant) from a trusted scheduler; no background timers are started. */
+    inbound?: CloudInboundConfig;
     send(
       message: {
         from: string;
@@ -428,16 +431,56 @@ export function createCloudTicketing(config: CloudConfig) {
     }
     return { sent, failed };
   }
+  /** Export confirmed deliveries to an idempotent audit sink, independently of SMTP retries. */
+  async function syncSentEmails(
+    tenant: string,
+    sink: (message: {
+      to: string;
+      subject: string;
+      text: string;
+      messageId: string;
+      sentAt: string;
+    }) => Promise<unknown>,
+    limit = 100,
+  ) {
+    ensureOpen();
+    text(tenant, 'tenant', 200);
+    integer(limit, 'limit', 100);
+    let synced = 0;
+    for await (const doc of documents(store, tenant, 'outbox-')) {
+      if (synced >= limit) break;
+      if (!doc.value.sentAt || doc.value.activitySyncedAt) continue;
+      await sink({
+        to: String(doc.value.to),
+        subject: String(doc.value.subject),
+        text: String(doc.value.text),
+        messageId: String(doc.value.deliveredMessageId || doc.value.messageId),
+        sentAt: String(doc.value.sentAt),
+      });
+      await atomic(store, tenant, async (tx) => {
+        const current = await tx.get(doc.key);
+        if (current?.sentAt === doc.value.sentAt)
+          tx.put(doc.key, { ...current, activitySyncedAt: new Date().toISOString() });
+      });
+      synced++;
+    }
+    return { synced };
+  }
   async function receiveEmail(tenant: string, source: string | Buffer) {
     text(tenant, 'tenant', 200);
     if (Buffer.byteLength(source) > 1024 * 1024)
       return { status: 'ignored', reason: 'message_too_large' };
-    const mail = await simpleParser(source, {
-      skipTextToHtml: true,
-      skipImageLinks: true,
-      maxHtmlLengthToParse: 1024 * 1024,
-    });
-    const mids = mail.subject?.match(/\bCS-\d+\b/g) ?? [];
+    let mail;
+    try {
+      mail = await simpleParser(source, {
+        skipTextToHtml: true,
+        skipImageLinks: true,
+        maxHtmlLengthToParse: 1024 * 1024,
+      });
+    } catch {
+      return { status: 'ignored', reason: 'malformed_message' };
+    }
+    const mids = mail.subject?.toUpperCase().match(/\bCS-\d+\b/g) ?? [];
     const numbers = [...new Set(mids)];
     const from = mail.from?.value ?? [];
     if (
@@ -530,6 +573,7 @@ export function createCloudTicketing(config: CloudConfig) {
       return { status: 'accepted', caseId: n, commentId: comment.id };
     });
   }
+  const inbox = cloudInbox(store, config.email?.inbound, receiveEmail);
   const router = express.Router();
   router.use((_req, res, next) => {
     res.set({
@@ -770,10 +814,13 @@ export function createCloudTicketing(config: CloudConfig) {
     addComment,
     getCase: detail,
     flushEmails,
+    syncSentEmails,
     receiveEmail,
+    pollInbox: inbox.pollInbox,
     approveAttachment,
     async close() {
       closed = true;
+      await inbox.close();
       await store.close?.();
     },
   };

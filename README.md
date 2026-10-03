@@ -329,3 +329,35 @@ Security automation runs nightly, including weekends, with Dependabot PRs for de
 ## 1.1.0 maintenance release
 
 See the [release notes](docs/RELEASE-1.1.0.md) for dependency updates and build compatibility. Existing setup, APIs and screenshots remain applicable. Contributors run TypeScript 7 through `npm run typecheck`; tsup uses the compatible TypeScript 5.9 compiler API for package declarations.
+
+## Cloud email replies and shared activity (1.2.0)
+
+Sending notifications alone does not read replies. In `createCloudTicketing`, keep your existing `email.from` and `email.send`, set `email.replyTo` to a monitored address, and add:
+
+```ts
+inbound: {
+  connection: {
+    host: process.env.IMAP_HOST!, port: 993, secure: true,
+    auth: { user: process.env.IMAP_USER!, pass: process.env.IMAP_PASS! },
+  },
+  mailbox: 'INBOX',
+}
+```
+
+From a trusted scheduled worker (not a public route), using the same tenant/store as the API:
+
+```ts
+await cases.flushEmails(tenant);
+const inbox = await cases.pollInbox(tenant, 100);
+console.log(inbox); // counts/rejection reasons, no message content
+// Optional CookieMail 2.2+ shared sent activity; also backfills prior confirmed notifications.
+await cases.syncSentEmails(
+  tenant,
+  (message) => mail.recordSent({ ...message, source: 'CookieCaseKit' }),
+  100,
+);
+```
+
+Run every minute. Bind IMAP credentials to the worker, not just the HTTP function. No timers start automatically. This works with Firestore, PostgreSQL, DynamoDB and Cosmos DB. Existing inbox messages are processed oldest-first in batches (default 25, maximum 100); new notes may take multiple ticks while catching up. Read messages are included, and mailbox flags are untouched. Keep the tenant and mailbox identity stable. A matching reply adds a public `source: email` note and an `Email reply added` staff history event; it does not trigger another notification.
+
+Replies must come from the requester, name exactly one case and reference a notification Message-ID. Ensure Reply-To reaches the configured inbox; aliases need forwarding. Store and transport failures leave the cursor retryable. Shared sent export uses an idempotent sink and a durable per-notification marker; it never retries SMTP because an activity import failed. See [1.2.0 release notes](docs/RELEASE-1.2.0.md).
