@@ -7,6 +7,32 @@
 
 # Changelog
 
+## [2.0.0](https://github.com/jaberk90/CookieCaseKit/compare/v1.2.1...v2.0.0) (2026-10-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* prepare stable 1.0.0 and nightly security updates
+
+### Features
+
+* add cloud adapters and serverless case management for 1.0.0 ([a138a60](https://github.com/jaberk90/CookieCaseKit/commit/a138a601e577b7708ef2a0781789f04f88a954cf))
+* add multi-cloud adapters for the 1.0.0 release ([4accb7e](https://github.com/jaberk90/CookieCaseKit/commit/4accb7e29b7573152f61d10cd38617ec0b6d533f))
+* ingest cloud email replies and export confirmed sent activity ([#22](https://github.com/jaberk90/CookieCaseKit/issues/22)) ([6bdf510](https://github.com/jaberk90/CookieCaseKit/commit/6bdf510c7f4a2aea809a02c9c27eb7e1c16cbde0))
+* prepare stable 1.0.0 and nightly security updates ([bcddcbe](https://github.com/jaberk90/CookieCaseKit/commit/bcddcbeafe9413e43a825283088374b2bf1f3da7))
+
+
+### Bug fixes
+
+* address CodeQL findings and validate OIDC claims ([cbdd1c5](https://github.com/jaberk90/CookieCaseKit/commit/cbdd1c56e3ec9bdca554debd65983c7e17bb37bd))
+* **deps:** bump @types/nodemailer from 7.0.12 to 8.0.2 ([7078bc3](https://github.com/jaberk90/CookieCaseKit/commit/7078bc3d575755cae8910ffb1887f945d428ce7c))
+* embedded theme and toolbar styling for 1.0.1 ([d80e599](https://github.com/jaberk90/CookieCaseKit/commit/d80e5995d8afa9dd00b8c6d9820f6f5aa44403e1))
+* isolate embedded theme styles for 1.0.1 ([49f2efa](https://github.com/jaberk90/CookieCaseKit/commit/49f2efa5b2481999faca6a7629dc5d7e5769688d))
+* patch vulnerable dependencies for 1.2.1 ([#68](https://github.com/jaberk90/CookieCaseKit/issues/68)) ([f6e4f2b](https://github.com/jaberk90/CookieCaseKit/commit/f6e4f2b83fdff3379f61aff64838ed6751372d0d))
+* send staff reply emails on their own cases ([ad7be33](https://github.com/jaberk90/CookieCaseKit/commit/ad7be33adf74e40a20cadb6c86a05cb117fc636b))
+* staff reply notifications for 1.0.2 ([cc50db4](https://github.com/jaberk90/CookieCaseKit/commit/cc50db40826e2d1497a58e653e744daaa9ab1acc))
+* validate public origin behind reverse proxies ([524cee1](https://github.com/jaberk90/CookieCaseKit/commit/524cee18201f0e12d8cafd2bd1f7f745efbc1a13))
+
 ## 1.2.0
 
 - Add durable cloud IMAP reply polling with read-only mailbox access, bounded backlog recovery and duplicate-safe public notes/history.
