@@ -1,6 +1,6 @@
 {
   "name": "cookiecasekit",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Embeddable case management for Node.js. Bring your authentication; configure the rest.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -192,8 +192,8 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
     "imapflow": "^2.1.2",
-    "mailparser": "^3.9.31",
-    "nodemailer": "^10.0.12"
+    "mailparser": "^3.12.4",
+    "nodemailer": "^10.2.1"
   },
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "^3.1142.0",

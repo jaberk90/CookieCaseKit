@@ -1,3 +1,10 @@
+## 1.2.1 (2026-10-24)
+
+### Security
+
+- Update dependencies to resolve all advisories reported by npm audit, including email address parsing and denial-of-service vulnerabilities.
+- Require patched Mailparser and Nodemailer versions for downstream installations.
+
 # Changelog
 
 ## 1.2.0
