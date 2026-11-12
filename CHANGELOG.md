@@ -1,3 +1,10 @@
+## 1.2.2 (2026-11-11)
+
+### Security
+
+- Upgrade the optional Firestore adapter SDK requirement to 9.4.1 or newer, removing the vulnerable legacy glob/minimatch dependency chain.
+- Refresh the lockfile to patched dependencies, including fast-xml-parser 5.12.0.
+
 ## 1.2.1 (2026-10-24)
 
 ### Security
